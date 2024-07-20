@@ -5,7 +5,7 @@
 
 The primary goal of this study is to offer a robust solution for detecting bots using the TwiBot-20 dataset. This approach combines semantic analysis, profile characteristic examination, and neighborhood information exploration to effectively address the challenge of bot identification on the X platform. The methodology workflow is illustrated in the figure below:
 
-![Workflow](figures/pipeline.png)
+![Workflow](images/pipeline.png)
 
 ## Dataset
 
