@@ -40,10 +40,16 @@ Understanding the nuances of this annotation procedure contributes to the interp
 From the data, three types of features were extracted:
 
 ### 1. User-based features
-A range of demographics extracted from each profile, including variables such as the number of followers, the presence of a profile image, verification status, location, and more. A comprehensive overview of the utilized variables is available in Table 1.
+A range of demographics extracted from each profile, including variables such as the number of followers, the presence of a profile image, verification status, location, and more. 
 
 ### 2. Network features
 Incorporating Singular Value Decomposition (SVD) with a dimensionality of 30, this technique was applied to the adjacency matrix of the graph, which includes follows and followers relationships. The resulting features from this process were then employed as graph embeddings.
 
 ### 3. Content features
-Utilizing BERT (Bidirectional Encoder Representations from Transformers), embeddings were crafted from a user’s most recent 200 tweets, calculating their mean value.
+Utilizing BERT (Bidirectional Encoder Representations from Transformers), embeddings were crafted from a user’s most recent 200 tweets, calculating their mean value. This features underwent through three distinct pipelines, as shown in the figure above. 
+
+    1. Utilizing all features extracted from BERT.
+
+    2. Reducing dimensions using supervised Singular Value Decomposition (SVD) from features extracted in pipeline 1.
+
+    3. Training a linear model on features extracted in pipeline 1 to predict bots, applying weights of linear regression to the embeddings, and further reducing dimensions using unsupervised SVD. 
