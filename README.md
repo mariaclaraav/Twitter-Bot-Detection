@@ -1,55 +1,82 @@
- # 🕵️‍♂️ Twitter Bot Detection
- Project developed for bot detection on Twitter (X) in the Synthetic Realities course in my master's program at UNICAMP.
+# 🕵️‍♂️ Twitter Bot Detection
 
- ## 🎯 Objective
+Project developed for bot detection on Twitter (X) in the Synthetic Realities
+course in my master's program at UNICAMP.
 
-The primary goal of this study is to offer a robust solution for detecting bots using the TwiBot-20 dataset. This approach combines semantic analysis, profile characteristic examination, and neighborhood information exploration to effectively address the challenge of bot identification on the X platform. The methodology workflow is illustrated in the figure below:
+## 🎯 Objective
+
+This study offers a bot-detection workflow using the TwiBot-20 dataset. It
+combines semantic analysis, profile characteristics, and neighbourhood
+information to identify bots on X.
 
 ![Workflow](images/pipeline.png)
 
-## 📊 Dataset
+## 📊 Dataset and data availability
 
-The analysis relies on the TwiBot-20 dataset, a publicly available Twitter bot detection benchmark. Spanning user-generated content on platform X from July to September 2020, the dataset comprises:
+The analysis uses the publicly available
+[TwiBot-20](https://twibot20.github.io/) Twitter bot-detection benchmark,
+which covers user-generated X content from July to September 2020:
 
 - 👥 229,573 users
 - 🐦 33,488,192 tweets
 - 🏷️ 8,723,736 user property items
 - 🔗 455,958 follow relationships
 
-The dataset is pre-divided into training and testing sets, with the balanced proportion for bot/human labeling as 0.561247/0.438753 and 0.540997/0.4590003 for each set, respectively. For validation purposes, a 20% subsample was extracted from the training set to facilitate feature selection.
+The dataset provides predefined training and testing sets. A 20% subsample of
+the training set can be used as validation data during feature selection.
+Download the dataset from its public source before running the end-to-end
+notebook, then place its files under `datasets/Raw/`. The repository includes
+only placeholders and selected processed feature metadata; it does not
+redistribute the raw TwiBot-20 data.
 
-The dataset is publicly available and can be accessed via the reference below:
+> Shangbin Feng, Herun Wan, Ningnan Wang, Jundong Li, and Minnan Luo.
+> *TwiBot-20: A comprehensive Twitter bot detection benchmark.* Proceedings
+> of the 30th ACM International Conference on Information & Knowledge
+> Management, 2021.
 
-- 📚 [1] Shangbin Feng, Herun Wan, Ningnan Wang, Jundong Li, and Minnan Luo. Twibot-20: A comprehensive Twitter bot detection benchmark. Proceedings of the 30th ACM International Conference on Information & Knowledge Management, 2021.
+## 🏷️ Labeling process
 
-## 🏷️ Labeling Process
+TwiBot-20 labels were crowdsourced using signals including unoriginal tweets,
+automated activity, verified-account marks, phishing or commercial links,
+repeated content, and irrelevant URLs.
 
-The labeling process of this dataset was performed via crowdsourcing, employing criteria such as:
+## 📈 Feature extraction
 
-- ✍️ Identifying tweets lacking originality
-- 🤖 Recognizing highly automated activities
-- ✔️ Presence of verified account marks
-- ⚠️ Detecting tweets with phishing or commercial links
-- 🔁 Pinpointing repeated content
-- 🌐 Flagging tweets with irrelevant URLs
+The workflow uses three feature families:
 
-Understanding the nuances of this annotation procedure contributes to the interpretability and insightfulness of the model training.
+1. **User-based features** — profile demographics such as follower count,
+   profile image, verification status, and location.
+2. **Network features** — SVD embeddings derived from follow and follower
+   relationships.
+3. **Content features** — BERT embeddings from each user's most recent 200
+   tweets, optionally reduced with supervised or unsupervised SVD.
 
-## 📈 Feature Extraction
+## Project structure
 
-From the data, three types of features were extracted:
+- `src/twitter_bot_detection/`
+  - `etl.py`
+  - `eda.py`
+  - `feature_selection.py`
+- `notebooks/e2e_example.ipynb` — step-by-step end-to-end example
+- `datasets/` — downloaded raw data, placeholders, and processed metadata
+- `pyproject.toml`
+- `requirements.txt`
 
-### 1️⃣ User-based features
-A range of demographics extracted from each profile, including variables such as the number of followers, the presence of a profile image, verification status, location, and more. 
+## Install
 
-### 2️⃣ Network features
-Incorporating Singular Value Decomposition (SVD) with a dimensionality of 30, this technique was applied to the adjacency matrix of the graph, which includes follows and followers relationships. The resulting features from this process were then employed as graph embeddings.
+```bash
+pip install -e .
+pip install -r requirements.txt
+```
 
-### 3️⃣ Content features
-Utilizing BERT (Bidirectional Encoder Representations from Transformers), embeddings were crafted from a user’s most recent 200 tweets, calculating their mean value. This features underwent through three distinct pipelines, as shown in the figure above: 
+## Usage
 
-   1. Utilizing all features extracted from BERT.
+```python
+from twitter_bot_detection.etl import make_profile_df, make_tweets_df
+from twitter_bot_detection.eda import profile_data_preprocessing
+from twitter_bot_detection.feature_selection import backwards_shap_feature_selection
+```
 
-   2. Reducing dimensions using supervised Singular Value Decomposition (SVD) from features extracted in pipeline 1.
-
-   3. Training a linear model on features extracted in pipeline 1 to predict bots, applying weights of linear regression to the embeddings, and further reducing dimensions using unsupervised SVD. 
+Use `notebooks/e2e_example.ipynb` to run the workflow from loading the
+downloaded dataset through preprocessing, baseline model training, and
+evaluation.
