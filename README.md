@@ -64,7 +64,7 @@ Utilizing BERT (Bidirectional Encoder Representations from Transformers), embedd
   - `etl.py`
   - `eda.py`
   - `feature_selection.py`
-- `notebooks/example_workflow.ipynb` (single example notebook)
+- `notebooks/e2e_example.ipynb` (single example notebook)
 - `datasets/` (data files/placeholders)
 - `pyproject.toml`
 - `requirements.txt`
@@ -84,4 +84,4 @@ from twitter_bot_detection.eda import profile_data_preprocessing
 from twitter_bot_detection.feature_selection import backwards_shap_feature_selection
 ```
 
-Use `notebooks/example_workflow.ipynb` as the reference notebook.
+Use `notebooks/e2e_example.ipynb` as the reference notebook.
