@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-package-dir = {"" = "lib"}
+package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
-where = ["lib"]
+where = ["src"]
