@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
 
-def profile_data_preprocessing(profile_df, label_df, split_df, neighbor_df):
+def profile_data_preprocessing(profile_df, label_df, split_df, neighbor_df, random_seed=42):
     """
     Preprocess the profile data by merging it with label, split, and neighbor dataframes,
     and adding various computed columns.
@@ -46,25 +46,43 @@ def profile_data_preprocessing(profile_df, label_df, split_df, neighbor_df):
         .rename(columns={"follow": "followed"})  # Rename 'follow' column to 'followed'
     )
 
-    # Merge all dataframes and add computed columns
-    return (
+    # Merge all dataframes
+    merged_df = (
         profile_df
         .merge(label_df, on="id", how="left")  # Merge with label_df on id
         .merge(split_df, on="id", how="left")  # Merge with split_df on id
         .merge(follow_df, on="id", how="left")  # Merge with follow_df on id
         .merge(followed_df, on="id", how="left")  # Merge with followed_df on id
-        .assign(
-            created_at=lambda d: pd.to_datetime(d["created_at"]),  # Convert created_at to datetime
-            followers_count=lambda d: d.public_metrics.str["followers_count"],  # Extract followers_count from public_metrics
-            following_count=lambda d: d.public_metrics.str["following_count"],  # Extract following_count from public_metrics
-            followers_follow_proportion=lambda d: d["followers_count"] / (d["following_count"] + 1e-3),  # Calculate followers to following proportion
-            listed_count=lambda d: d.public_metrics.str["listed_count"],  # Extract listed_count from public_metrics
-            tweet_count=lambda d: d.public_metrics.str["tweet_count"],  # Extract tweet_count from public_metrics
-            reference_date=lambda d: d["created_at"].max(),  # Find the latest created_at date
-            tenure=lambda d: (d["reference_date"] - d["created_at"]).dt.days,  # Calculate tenure in days
-            follow_string=lambda d: d["follow"].str.join(" ").fillna(""),  # Join follow list into a string
-            followed_string=lambda d: d["followed"].str.join(" ").fillna(""),  # Join followed list into a string
-            friend_string=lambda d: d["friend"].str.join(" ").fillna(""),  # Join friend list into a string
-            random_number=lambda d: np.random.random(len(d))  # Add a random number column
-        )
+    )
+
+    merged_df["created_at"] = pd.to_datetime(merged_df["created_at"])  # Convert created_at to datetime
+
+    # Use only train split to build reference_date when available to avoid leakage
+    train_mask = (
+        merged_df["split"].astype(str).str.lower().eq("train")
+        if "split" in merged_df.columns
+        else pd.Series(False, index=merged_df.index)
+    )
+    train_reference_date = merged_df.loc[train_mask, "created_at"].max()
+    reference_date = (
+        train_reference_date
+        if pd.notna(train_reference_date)
+        else merged_df["created_at"].max()
+    )
+
+    rng = np.random.default_rng(random_seed)
+
+    # Add computed columns
+    return merged_df.assign(
+        followers_count=lambda d: d.public_metrics.str["followers_count"],  # Extract followers_count from public_metrics
+        following_count=lambda d: d.public_metrics.str["following_count"],  # Extract following_count from public_metrics
+        followers_follow_proportion=lambda d: d["followers_count"] / (d["following_count"] + 1e-3),  # Calculate followers to following proportion
+        listed_count=lambda d: d.public_metrics.str["listed_count"],  # Extract listed_count from public_metrics
+        tweet_count=lambda d: d.public_metrics.str["tweet_count"],  # Extract tweet_count from public_metrics
+        reference_date=reference_date,  # Reference date for tenure computation
+        tenure=lambda d: (d["reference_date"] - d["created_at"]).dt.days,  # Calculate tenure in days
+        follow_string=lambda d: d["follow"].str.join(" ").fillna(""),  # Join follow list into a string
+        followed_string=lambda d: d["followed"].str.join(" ").fillna(""),  # Join followed list into a string
+        friend_string=lambda d: d["friend"].str.join(" ").fillna(""),  # Join friend list into a string
+        random_number=lambda d: rng.random(len(d))  # Add a reproducible random number column
     )
